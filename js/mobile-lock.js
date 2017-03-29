@@ -1,168 +1,215 @@
 function mobileLock() {
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext('2d');
-    var n= 3;
-    var r = ctx.canvas.width / (2 + 4 * n);
-    var circleArray = [];
-    var untouchedArr = [];
-    var isTouch = false;
-    createCircle(ctx,circleArray,untouchedArr);
+  this.canvas = document.getElementById("canvas");
+  this.ctx = this.canvas.getContext('2d');
 
-    touchEvent(canvas,ctx,circleArray,untouchedArr,r,isTouch);
-    /*drawStatusPoint(ctx);*/
-}
-function drawCircle(ctx, x, y, radius) {
-    //设置圆圈轮廓的颜色
-    ctx.strokeStyle = 'rgb(0,' + Math.floor(255 - 42.5) + ',' + Math.floor(255 - 42.5) + ')';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    //画圈圈
-    ctx.arc(x, y, radius, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.stroke();
+  this.touchedArr = [];//保存触摸过的圆圈
+  this.untouchedArr = [];//保存未触摸的圆圈
+  this.isTouch = false;//标记值：是否被触摸
+  this.pswObj = window.localStorage.getItem('password') ? {
+    step: 0,
+    spassword: JSON.parse(window.localStorage.getItem('password'))
+  } : {};
+
+  createCircle();
+  touchEvent();
 }
 
-function createCircle(ctx,circleArray,untouchedArr) {// 创建解锁点的坐标，根据canvas的大小来平均分配半径
+function drawCircle(x, y) {
+  //设置圆圈轮廓的颜色
+  this.ctx.strokeStyle = '#00FF00';
+  this.ctx.lineWidth = 2;
+  this.ctx.beginPath();
+  //画圈圈
+  this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
+  this.ctx.closePath();
+  this.ctx.stroke();
+}
 
-
-    var n = 3;
-    var count = 0;
-    var r = ctx.canvas.width / (2 + 4 * n);// 公式计算
-    /* this.lastPoint = [];
-     this.arr = [];
-     this.restPoint = [];*/
-
-    for (var i = 0; i < n; i++) {
-        for (var j = 0; j < n; j++) {
-            count++;
-            var obj = {
-                x: j * 4 * r + 3 * r,
-                y: i * 4 * r + 3 * r,
-                index: count
-            };
-            circleArray.push(obj);
-            untouchedArr.push(obj);
-        }
+function createCircle() {// 创建解锁点的坐标，根据canvas的大小来平均分配半径
+  var n = 3;
+  var count = 0;
+  this.circleArr = [];
+  this.r = this.ctx.canvas.width / (2 + 4 * n);//圆圈半径
+  /*清空之前的触碰点*/
+  this.touchedArr = [];
+  this.untouchedArr = [];
+  for (var i = 0; i < n; i++) {
+    for (var j = 0; j < n; j++) {
+      count++;
+      var obj = {
+        x: j * 4 * this.r + 3 * this.r,
+        y: i * 4 * this.r + 3 * this.r,
+        index: count
+      };
+      this.circleArr.push(obj);
+      this.untouchedArr.push(obj);
     }
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    for (var i = 0; i < circleArray.length; i++) {
-        drawCircle(ctx, circleArray[i].x, circleArray[i].y, r);
-    }
-
-    /*touchEvent(circleArray, r);*/
+  }
+  this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+  for (var i = 0; i < this.circleArr.length; i++) {
+    drawCircle(this.circleArr[i].x, this.circleArr[i].y);
+  }
 }
+
 //画触摸的点
-function drawTouchedPoint(ctx,r, touchedArr) {
-
-    console.log("长度" + touchedArr.length);
-    for (var i = 0; i < touchedArr.length; i++) {
-        //设置触摸的点的填充颜色
-        ctx.fillStyle = "#CFE6FF";
-        ctx.beginPath();
-        ctx.arc(touchedArr[i].x, touchedArr[i].y, r / 2, 0, Math.PI * 2, true);
-        ctx.closePath();
-        ctx.fill();
-    }
-
+function drawTouchedPoint() {
+  console.log("长度" + this.touchedArr.length);
+  for (var i = 0; i < this.touchedArr.length; i++) {
+    //设置触摸的点的填充颜色
+    this.ctx.fillStyle = "#00FF00";
+    this.ctx.beginPath();
+    this.ctx.arc(this.touchedArr[i].x, this.touchedArr[i].y, this.r / 2, 0, Math.PI * 2, true);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
 }
-/*function drawStatusPoint (ctx) { // 初始化状态线条
-    for (var i = 0 ; i < this.lastPoint.length ; i++) {
-        this.ctx.strokeStyle = 'red';
-        this.ctx.beginPath();
-        this.ctx.arc(this.lastPoint[i].x, this.lastPoint[i].y, this.r, 0, Math.PI * 2, true);
-        this.ctx.closePath();
-        this.ctx.stroke();
-    }
-}*/
+
 //画走过的轨迹
-function drawLine(ctx,po, touchedArr) {
+function drawLine(po) {
+  this.ctx.beginPath();
+  this.ctx.lineWidth = 3;
+  this.ctx.moveTo(this.touchedArr[0].x, this.touchedArr[0].y);
 
-    ctx.beginPath();
-    ctx.lineWidth = 3;
-    ctx.moveTo(touchedArr[0].x, touchedArr[0].y);
-
-    for (var i = 1; i < touchedArr.length; i++) {
-        ctx.lineTo(touchedArr[i].x, touchedArr[i].y);
-    }
-    ctx.lineTo(po.x, po.y);
-    ctx.stroke();
-    ctx.closePath();
-
+  for (var i = 1; i < this.touchedArr.length; i++) {
+    this.ctx.lineTo(this.touchedArr[i].x, this.touchedArr[i].y);
+  }
+  this.ctx.lineTo(po.x, po.y);
+  this.ctx.stroke();
+  this.ctx.closePath();
 }
+
 function getPosition(e) {
-    var rect = e.currentTarget.getBoundingClientRect();
-    var p = {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
-    };
-    return p;
+  var rect = e.currentTarget.getBoundingClientRect();
+  var p = {
+    x: e.touches[0].clientX - rect.left,
+    y: e.touches[0].clientY - rect.top
+  };
+  return p;
 }
-function changePos(ctx,p, arr, touchedArr, untouchedArr, r) {
-    console.log("touchArray"+touchedArr+"un"+untouchedArr);
 
-    //因为每次移动，路径就会发生改变
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+function changePos(p) {
+  //因为每次移动，路径就会发生改变,所以先画出原来的路径，再添加新的点
+  this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-    for (var i = 0; i < arr.length; i++) { // 每帧先把面板画出来
-        drawCircle(ctx, arr[i].x, arr[i].y, r);
+  for (var i = 0; i < this.circleArr.length; i++) { // 每帧先把面板画出来
+    drawCircle(this.circleArr[i].x, this.circleArr[i].y);
+  }
+  drawTouchedPoint();
+  drawLine(p);
+  for (var i = 0; i < this.untouchedArr.length; i++) {
+    if (Math.abs(p.x - this.untouchedArr[i].x) < this.r && Math.abs(p.y - this.untouchedArr[i].y) < this.r) {
+      drawTouchedPoint();
+      this.touchedArr.push(this.untouchedArr[i]);
+      this.untouchedArr.splice(i, 1);
+      break;
     }
+  }
+}
 
-    drawTouchedPoint(ctx,r, touchedArr);
-    drawLine(ctx,p, touchedArr);
+function checkPass(psw1, psw2) {// 检测密码
+  var p1 = '',
+      p2 = '';
+  for (var i = 0; i < psw1.length; i++) {
+    console.log(psw1[i]);
+    p1 += psw1[i].index;
+  }
+  for (var i = 0; i < psw2.length; i++) {
+    p2 += psw2[i].index;
+  }
+  console.log("先前的序列" + p1);
+  console.log("之后的序列" + p2);
+  return p1 === p2;
+}
 
-    for (var i = 0; i < untouchedArr.length; i++) {
-        if (Math.abs(p.x - untouchedArr[i].x) < r && Math.abs(p.y - untouchedArr[i].y) < r) {
-            drawTouchedPoint(ctx,r, untouchedArr[i]);
-            touchedArr.push(untouchedArr[i]);
-            untouchedArr.splice(i, 1);
-            break;
-        }
+function storePath(psw) {// touchend结束之后对密码和状态的处理
+  var bool = document.getElementsByName("operation")[1].checked;
+  /*密码长度*/
+  console.log("长度" + psw.length);
+  if (psw.length < 3) {
+    console.log("it works");
+    document.getElementById('title').innerHTML = '密码太短，至少需要5个点';
+  }
+  else {
+    if (this.pswObj.step == 1) {
+      if (checkPass(this.pswObj.fpassword, psw)) {
+        console.log("they are same");
+        this.pswObj.step = 2;
+        this.pswObj.spassword = psw;
+        document.getElementById('title').innerHTML = '密码保存成功';
+        window.localStorage.setItem('password', JSON.stringify(this.pswObj.spassword));
+      } else {
+        document.getElementById('title').innerHTML = '两次不一致，重新输入';
+        delete this.pswObj.step;
+      }
+    } else if (this.pswObj.step == 2&&bool) {
+      if (checkPass(this.pswObj.spassword, psw)) {
+        document.getElementById('title').innerHTML = '解锁成功';
+      } else {
+        document.getElementById('title').innerHTML = '解锁失败';
+      }
+    } else {
+      this.pswObj.step = 1;
+      this.pswObj.fpassword = psw;
+      document.getElementById('title').innerHTML = '再次输入';
     }
-
+  }
 }
-//保存路径
-function storePath(touchedArr) {
 
+//重置，等待用户输入
+function reset() {
+
+  createCircle();//要是touchedArr能够变为空就好了
 }
+
 //给每个圈绑定触摸事件
+function touchEvent() {
 
-function touchEvent(canvas,ctx,circleArr,untouchedArr,r,isTouch) {
+  //pswObj想存的是 两次一样，并保存的正确密码
 
-    var touchedArr = [];
-    canvas.addEventListener("touchstart", function (startEve) {
-        startEve.preventDefault();
-        var p = getPosition(startEve);
+  var self = this;
 
-        console.log("当前触摸的点:" + p);
-        for (var i = 0; i < circleArr.length; i++) {
-            if (Math.abs(p.x - circleArr[i].x) < r && Math.abs(p.y - circleArr[i].y) < r) {//证明在圈圈内部
-                //不能重复再画
-                isTouch = true;
-                //保存这个点的位置
-                touchedArr.push(circleArr[i]);
-                //先把触摸的这个点画出来
-                drawTouchedPoint(ctx,r, touchedArr);
-                //保存去掉正确路径下的圈圈
-                untouchedArr.splice(i, 1);
-                break;
-            }
-        }
-    }, false);
-    canvas.addEventListener("touchmove", function (moveEve) {
-        if (isTouch) {
-            console.log("111")
-            changePos(ctx,getPosition(moveEve), circleArr, touchedArr, untouchedArr, r);
-        }
-    }, false);
-   canvas.addEventListener("touchend",function(endEve){
-       if(isTouch){
-           isTouch = false;
-           storePath(touchedArr);
-       }
+  this.canvas.addEventListener("touchstart", function (startEve) {
+    startEve.preventDefault();
+    var p = getPosition(startEve);
 
-   },false);
-    document.addEventListener('touchmove', function(e){
-        e.preventDefault();
-    },false);
+    console.log("当前触摸的点:" + p);
+    for (var i = 0; i < self.circleArr.length; i++) {
+      if (Math.abs(p.x - self.circleArr[i].x) < self.r && Math.abs(p.y - self.circleArr[i].y) < self.r) {//证明在圈圈内部
+        //不能重复再画
+        self.isTouch = true;
+        //保存这个点的位置
+        self.touchedArr.push(self.circleArr[i]);
+        //先把触摸的这个点画出来
+        drawTouchedPoint();
+        //保存去掉正确路径下的圈圈
+        self.untouchedArr.splice(i, 1);
+        break;
+      }
+    }
+  }, false);
 
+  self.canvas.addEventListener("touchmove", function (moveEve) {
+    if (self.isTouch) {
+      console.log("111");
+      changePos(getPosition(moveEve));
+    }
+  }, false);
+
+  self.canvas.addEventListener("touchend", function (endEve) {
+    if (self.isTouch) {
+      self.isTouch = false;
+
+      storePath(self.touchedArr);
+      setTimeout(function () {
+        reset();
+      }, 800);
+
+    }
+
+  }, false);
+
+  document.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+  }, false);
 }
+
