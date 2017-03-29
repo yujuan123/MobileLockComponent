@@ -5,14 +5,39 @@
     <title>Title</title>
     <script src="js/mobile-lock.js"></script>
     <style>
-        canvas{
-            margin:10% 35% 10% 35%;
-            border: 1px solid black;
+        .container {
+            margin: auto;
+            width: 900px;
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        canvas {
+            margin: 0;
+        }
+
+        input[type=radio] {
+            display: inline-block;
+            vertical-align: middle;
+            width: 40px;
+            height: 40px;
+            line-height: 20px;
+            color: #d8d8d8;
         }
     </style>
 </head>
 <body onload="mobileLock()">
-
-<canvas id="canvas" width="300" height="300" ></canvas>
+<div class="container">
+    <h1>手势密码</h1>
+    <canvas id="canvas" width="900" height="900"></canvas>
+    <p id="title">请输入手势密码</p>
+    <div>
+        <input id="setPass" name="operation" type="radio" value="" checked><span>设置密码</span>
+    </div>
+    <div>
+        <input id="checkPass" name="operation" type="radio" value=""><span>验证密码</span>
+    </div>
+</div>
 </body>
 </html>
