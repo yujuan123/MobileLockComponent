@@ -4,8 +4,9 @@ function mobileLock() {
 
   this.touchedArr = [];//保存触摸过的圆圈
   this.untouchedArr = [];//保存未触摸的圆圈
-  this.isTouch = false;//标记值：是否被触摸
-  this.pswObj = window.localStorage.getItem('password') ? {
+  this.isTouch = false;//标记是否被触摸
+  this.isShort = false;//标记密码长度是否太短
+  this.passObj = window.localStorage.getItem('password') ? {
     step: 0,
     spassword: JSON.parse(window.localStorage.getItem('password'))
   } : {};
@@ -25,7 +26,7 @@ function drawCircle(x, y) {
   this.ctx.stroke();
 }
 
-function createCircle() {// 创建解锁点的坐标，根据canvas的大小来平均分配半径
+function createCircle() {
   var n = 3;
   var count = 0;
   this.circleArr = [];
@@ -88,14 +89,16 @@ function getPosition(e) {
 }
 
 function changePos(p) {
-  //因为每次移动，路径就会发生改变,所以先画出原来的路径，再添加新的点
+  //因为每次移动，路径就会发生改变
   this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
   for (var i = 0; i < this.circleArr.length; i++) { // 每帧先把面板画出来
     drawCircle(this.circleArr[i].x, this.circleArr[i].y);
   }
+  //所以先画出原来的每个点，每条线
   drawTouchedPoint();
   drawLine(p);
+  //再添加触摸的点
   for (var i = 0; i < this.untouchedArr.length; i++) {
     if (Math.abs(p.x - this.untouchedArr[i].x) < this.r && Math.abs(p.y - this.untouchedArr[i].y) < this.r) {
       drawTouchedPoint();
@@ -106,7 +109,8 @@ function changePos(p) {
   }
 }
 
-function checkPass(psw1, psw2) {// 检测密码
+//比较输入的密码（序列）
+function checkPass(psw1, psw2) {
   var p1 = '',
       p2 = '';
   for (var i = 0; i < psw1.length; i++) {
@@ -121,50 +125,55 @@ function checkPass(psw1, psw2) {// 检测密码
   return p1 === p2;
 }
 
-function storePath(psw) {// touchend结束之后对密码和状态的处理
+
+function storePath(psw) {
   var bool = document.getElementsByName("operation")[1].checked;
   /*密码长度*/
   console.log("长度" + psw.length);
-  if (psw.length < 3) {
+  if (psw.length < 5) {
     console.log("it works");
-    document.getElementById('title').innerHTML = '密码太短，至少需要5个点';
+    this.isShort = true;
+    document.getElementById('info').innerHTML = '密码太短，至少需要5个点';
   }
   else {
-    if (this.pswObj.step == 1) {
-      if (checkPass(this.pswObj.fpassword, psw)) {
+    if (this.passObj.step == 1) {
+      if (checkPass(this.passObj.fpassword, psw)) {
         console.log("they are same");
-        this.pswObj.step = 2;
-        this.pswObj.spassword = psw;
-        document.getElementById('title').innerHTML = '密码保存成功';
-        window.localStorage.setItem('password', JSON.stringify(this.pswObj.spassword));
+        this.passObj.step = 2;
+        this.passObj.spassword = psw;
+        document.getElementById('info').innerHTML = '密码保存成功，请选择验证密码';
+        window.localStorage.setItem('password', JSON.stringify(this.passObj.spassword));
       } else {
-        document.getElementById('title').innerHTML = '两次不一致，重新输入';
-        delete this.pswObj.step;
+        document.getElementById('info').innerHTML = '两次不一致，重新输入';
+        delete this.passObj.step;
       }
-    } else if (this.pswObj.step == 2&&bool) {
-      if (checkPass(this.pswObj.spassword, psw)) {
-        document.getElementById('title').innerHTML = '解锁成功';
+    } else if (this.passObj.step == 2&&bool) {
+      if (checkPass(this.passObj.spassword, psw)) {
+        document.getElementById('info').innerHTML = '解锁成功';
       } else {
-        document.getElementById('title').innerHTML = '解锁失败';
+        document.getElementById('info').innerHTML = '解锁失败';
       }
     } else {
-      this.pswObj.step = 1;
-      this.pswObj.fpassword = psw;
-      document.getElementById('title').innerHTML = '再次输入';
+      this.passObj.step = 1;
+      this.passObj.fpassword = psw;
+      document.getElementById('info').innerHTML = '再次输入';
     }
   }
 }
 
 //重置，等待用户输入
 function reset() {
-
+  if(this.isShort){
+    document.getElementById('info').innerHTML = '请再次输入手势密码';
+    this.isShort = false;
+  }
   createCircle();//要是touchedArr能够变为空就好了
 }
 
 //给每个圈绑定触摸事件
 function touchEvent() {
 
-  //pswObj想存的是 两次一样，并保存的正确密码
+  //passObj想存的是 两次一样，并保存的正确密码
 
   var self = this;
 
