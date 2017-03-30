@@ -149,9 +149,9 @@ function storePath(psw) {
       }
     } else if (this.passObj.step == 2&&bool) {
       if (checkPass(this.passObj.spassword, psw)) {
-        document.getElementById('info').innerHTML = '解锁成功';
+        document.getElementById('info').innerHTML = '密码正确';
       } else {
-        document.getElementById('info').innerHTML = '解锁失败';
+        document.getElementById('info').innerHTML = '密码不正确！';
       }
     } else {
       this.passObj.step = 1;
